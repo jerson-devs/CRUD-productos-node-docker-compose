@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD Productos</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+            background: #f4f6f8;
+            color: #222;
+            padding: 24px;
+        }
+
+        .contenedor {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 1.6rem;
+            margin-bottom: 20px;
+        }
+
+        .panel {
+            background: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+        }
+
+        h2 {
+            font-size: 1.1rem;
+            margin-bottom: 14px;
+        }
+
+        form {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .campo {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .campo.ancho {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #555;
+        }
+
+        input,
+        textarea {
+            padding: 9px 11px;
+            border: 1px solid #ccd3da;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-family: inherit;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 70px;
+        }
+
+        .acciones-form {
+            grid-column: 1 / -1;
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            border: none;
+            border-radius: 6px;
+            padding: 10px 18px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-principal {
+            background: #2563eb;
+            color: #fff;
+        }
+
+        .btn-principal:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-secundario {
+            background: #e2e8f0;
+            color: #334155;
+        }
+
+        .btn-secundario:hover {
+            background: #cbd5e1;
+        }
+
+        .btn-editar {
+            background: #f59e0b;
+            color: #fff;
+            padding: 6px 12px;
+        }
+
+        .btn-eliminar {
+            background: #dc2626;
+            color: #fff;
+            padding: 6px 12px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 10px;
+            border-bottom: 1px solid #e5e9ee;
+        }
+
+        th {
+            background: #f8fafc;
+            color: #475569;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        td.acciones {
+            display: flex;
+            gap: 6px;
+        }
+
+        .mensaje {
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .mensaje.ok {
+            display: block;
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .mensaje.error {
+            display: block;
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .vacio {
+            text-align: center;
+            color: #94a3b8;
+            padding: 20px;
+        }
+
+        .miniatura {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #e5e9ee;
+            display: block;
+        }
+
+        @media (max-width: 640px) {
+            form {
+                grid-template-columns: 1fr;
+            }
+
+            table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="contenedor">
+        <h1>CRUD de Productos</h1>
+
+        <div id="mensaje" class="mensaje"></div>
+
+        <div class="panel">
+            <h2 id="titulo-form">Registrar producto</h2>
+            <form id="form-producto">
+                <input type="hidden" id="id">
+                <div class="campo">
+                    <label for="nombre">Nombre</label>
+                    <input type="text" id="nombre" required maxlength="200">
+                </div>
+                <div class="campo">
+                    <label for="precio">Precio</label>
+                    <input type="number" id="precio" step="0.01" min="0">
+                </div>
+                <div class="campo">
+                    <label for="cantidad">Cantidad</label>
+                    <input type="number" id="cantidad" step="1" min="0">
+                </div>
+                <div class="campo">
+                    <label for="imagen">Imagen (URL)</label>
+                    <input type="text" id="imagen" maxlength="255">
+                </div>
+                <div class="campo ancho">
+                    <label for="descripcion">Descripcion</label>
+                    <textarea id="descripcion"></textarea>
+                </div>
+                <div class="acciones-form">
+                    <button type="submit" class="btn-principal" id="btn-guardar">Guardar</button>
+                    <button type="button" class="btn-secundario" id="btn-cancelar" style="display:none">Cancelar</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="panel">
+            <h2>Lista de productos</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Precio</th>
+                        <th>Cantidad</th>
+                        <th>Descripcion</th>
+                        <th>Imagen</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-productos">
+                    <tr>
+                        <td colspan="7" class="vacio">Cargando...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const API = "/producto";
+
+        const form = document.getElementById("form-producto");
+        const idInput = document.getElementById("id");
+        const nombreInput = document.getElementById("nombre");
+        const precioInput = document.getElementById("precio");
+        const cantidadInput = document.getElementById("cantidad");
+        const descripcionInput = document.getElementById("descripcion");
+        const imagenInput = document.getElementById("imagen");
+        const tituloForm = document.getElementById("titulo-form");
+        const btnCancelar = document.getElementById("btn-cancelar");
+        const tabla = document.getElementById("tabla-productos");
+        const mensaje = document.getElementById("mensaje");
+
+        function mostrarMensaje(texto, tipo) {
+            mensaje.textContent = texto;
+            mensaje.className = "mensaje " + tipo;
+            clearTimeout(mostrarMensaje.timer);
+            mostrarMensaje.timer = setTimeout(() => {
+                mensaje.className = "mensaje";
+            }, 3000);
+        }
+
+        function escapar(valor) {
+            if (valor === null || valor === undefined) return "";
+            return String(valor)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;");
+        }
+
+        async function listarProductos() {
+            try {
+                const respuesta = await fetch(API);
+                if (!respuesta.ok) throw new Error("No se pudo obtener la lista");
+                const productos = await respuesta.json();
+                renderizar(productos);
+            } catch (error) {
+                tabla.innerHTML = '<tr><td colspan="7" class="vacio">' + escapar(error.message) + "</td></tr>";
+                mostrarMensaje(error.message, "error");
+            }
+        }
+
+        function renderizar(productos) {
+            if (!productos.length) {
+                tabla.innerHTML = '<tr><td colspan="7" class="vacio">No hay productos registrados</td></tr>';
+                return;
+            }
+
+            tabla.innerHTML = productos.map((producto) => {
+                const imagen = producto.imagen
+                    ? '<img class="miniatura" src="' + escapar(producto.imagen) + '" alt="' + escapar(producto.nombre) + '" ' +
+                      'onerror="this.replaceWith(document.createTextNode(\'Sin imagen\'))">'
+                    : "-";
+                return (
+                    "<tr>" +
+                    "<td>" + escapar(producto.id) + "</td>" +
+                    "<td>" + escapar(producto.nombre) + "</td>" +
+                    "<td>" + escapar(producto.precio) + "</td>" +
+                    "<td>" + escapar(producto.cantidad) + "</td>" +
+                    "<td>" + escapar(producto.descripcion) + "</td>" +
+                    "<td>" + imagen + "</td>" +
+                    '<td class="acciones">' +
+                    '<button class="btn-editar" data-editar="' + escapar(producto.id) + '">Editar</button>' +
+                    '<button class="btn-eliminar" data-eliminar="' + escapar(producto.id) + '">Eliminar</button>' +
+                    "</td>" +
+                    "</tr>"
+                );
+            }).join("");
+        }
+
+        function limpiarFormulario() {
+            form.reset();
+            idInput.value = "";
+            tituloForm.textContent = "Registrar producto";
+            btnCancelar.style.display = "none";
+        }
+
+        async function cargarProducto(id) {
+            try {
+                const respuesta = await fetch(API + "/" + id);
+                if (!respuesta.ok) throw new Error("Producto no encontrado");
+                const producto = await respuesta.json();
+                idInput.value = producto.id;
+                nombreInput.value = producto.nombre || "";
+                precioInput.value = producto.precio || "";
+                cantidadInput.value = producto.cantidad || "";
+                descripcionInput.value = producto.descripcion || "";
+                imagenInput.value = producto.imagen || "";
+                tituloForm.textContent = "Editar producto #" + producto.id;
+                btnCancelar.style.display = "inline-block";
+                nombreInput.focus();
+            } catch (error) {
+                mostrarMensaje(error.message, "error");
+            }
+        }
+
+        form.addEventListener("submit", async (evento) => {
+            evento.preventDefault();
+
+            const datos = {
+                nombre: nombreInput.value.trim(),
+                precio: precioInput.value === "" ? null : Number(precioInput.value),
+                cantidad: cantidadInput.value === "" ? null : Number(cantidadInput.value),
+                descripcion: descripcionInput.value.trim() || null,
+                imagen: imagenInput.value.trim() || null
+            };
+
+            const id = idInput.value;
+            const url = id ? API + "/" + id : API;
+            const metodo = id ? "PUT" : "POST";
+
+            try {
+                const respuesta = await fetch(url, {
+                    method: metodo,
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(datos)
+                });
+
+                const resultado = await respuesta.json();
+                if (!respuesta.ok) throw new Error(resultado.mensaje || "Error al guardar");
+
+                mostrarMensaje(resultado.mensaje || "Operacion realizada", "ok");
+                limpiarFormulario();
+                listarProductos();
+            } catch (error) {
+                mostrarMensaje(error.message, "error");
+            }
+        });
+
+        btnCancelar.addEventListener("click", limpiarFormulario);
+
+        tabla.addEventListener("click", async (evento) => {
+            const idEditar = evento.target.dataset.editar;
+            const idEliminar = evento.target.dataset.eliminar;
+
+            if (idEditar) {
+                cargarProducto(idEditar);
+                return;
+            }
+
+            if (idEliminar) {
+                if (!confirm("¿Eliminar el producto #" + idEliminar + "?")) return;
+
+                try {
+                    const respuesta = await fetch(API + "/" + idEliminar, { method: "DELETE" });
+                    const resultado = await respuesta.json();
+                    if (!respuesta.ok) throw new Error(resultado.mensaje || "Error al eliminar");
+
+                    mostrarMensaje(resultado.mensaje || "Producto eliminado", "ok");
+                    if (idInput.value === idEliminar) limpiarFormulario();
+                    listarProductos();
+                } catch (error) {
+                    mostrarMensaje(error.message, "error");
+                }
+            }
+        });
+
+        listarProductos();
+    </script>
+</body>
+</html>
